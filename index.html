@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-commerce RTIM Testing Sandbox (Vanilla CSS)</title>
+    
+    <style>
+        /* CSS Variables for theming */
+        :root {
+            --color-primary: #4f46e5; /* Indigo-600 */
+            --color-secondary: #ec4899; /* Pink-500 */
+            --color-success: #10b981; /* Green-600 */
+            --color-info: #0ea5e9; /* Sky-500 */
+            --color-background: #f7f9fb;
+            --color-text: #1f2937;
+            --color-light-bg: #ffffff;
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Base Styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--color-background);
+            padding: 16px;
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding-top: 64px;
+            padding-bottom: 32px;
+        }
+
+        /* Fixed Cart Summary */
+        .cart-summary {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            background-color: var(--color-light-bg);
+            padding: 12px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid #c7d2fe;
+            font-size: 0.875rem;
+            font-weight: 500;
+            z-index: 50;
+        }
+        .cart-summary .count { color: var(--color-primary); font-weight: bold; }
+        .cart-summary .wishlist-count { color: var(--color-secondary); font-weight: bold; }
+        
+        /* Navigation (for PDP) */
+        .navbar {
+            background-color: var(--color-light-bg);
+            padding: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+            margin-bottom: 32px;
+        }
+        .navbar a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.15s;
+        }
+        .navbar a:hover { color: #4338ca; }
+
+
+        /* Header */
+        header { text-align: center; margin-bottom: 48px; }
+        header h1 { font-size: 3rem; font-weight: 800; color: var(--color-text); margin-bottom: 8px; }
+        header p { font-size: 1.25rem; color: #6b7280; }
+
+        /* Section Headings */
+        h2 { font-size: 1.5rem; font-weight: bold; color: var(--color-text); margin-bottom: 24px; }
+
+        /* --- CAROUSEL STYLES (4 POSITIONS) --- */
+        .carousel-wrapper {
+            position: relative;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden; /* Crucial for hiding adjacent slides */
+        }
+        .carousel-container {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            /* FIX: Set container width to 4 slides * 100% = 400% */
+            width: 400%;
+        }
+        .carousel-slide {
+            flex-shrink: 0;
+            /* FIX: Each slide is exactly 1/4 of the 400% container width, which equals 100% of the wrapper width */
+            width: 25%; 
+            padding: 40px;
+            height: 288px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-light-bg);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+        }
+        .slide-1 { background-color: var(--color-primary); }
+        .slide-1:hover { background-color: #4338ca; }
+        .slide-2 { background-color: var(--color-secondary); }
+        .slide-2:hover { background-color: #db2777; }
+        .slide-3 { background-color: var(--color-success); }
+        .slide-3:hover { background-color: #059669; }
+        .slide-4 { background-color: var(--color-info); }
+        .slide-4:hover { background-color: #0284c7; }
+
+        .carousel-slide h3 { font-size: 2.25rem; font-weight: 800; }
+        .carousel-slide p { margin-top: 8px; font-size: 1.125rem; opacity: 0.9; }
+
+        /* Carousel Navigation Buttons (Arrows) */
+        .carousel-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.5);
+            border: none;
+            padding: 12px;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            color: var(--color-text);
+            cursor: pointer;
+            z-index: 10;
+            transition: background-color 0.3s;
+        }
+        .carousel-nav-btn:hover { background-color: rgba(255, 255, 255, 0.8); }
+        #carousel-prev { left: 16px; }
+        #carousel-next { right: 16px; }
+
+        /* Carousel Navigation Dots */
+        .carousel-dots {
+            position: absolute;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+        }
+        .carousel-dot {
+            width: 12px;
+            height: 12px;
+            background-color: var(--color-light-bg);
+            border-radius: 50%;
+            opacity: 0.5;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            border: none;
+            padding: 0;
+        }
+        .carousel-dot:hover { opacity: 1; }
+        .carousel-dot.active { opacity: 1; }
+
+        /* --- PRODUCT GRID STYLES --- */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 24px;
+        }
+        @media (min-width: 640px) { /* sm breakpoint */
+            .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1024px) { /* lg breakpoint */
+            .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1280px) { /* xl breakpoint */
+            .product-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        }
+
+        .product-card {
+            background-color: var(--color-light-bg);
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s;
+            overflow: hidden;
+            border: 1px solid #f3f4f6;
+            display: flex;
+            flex-direction: column;
+        }
+        .product-card:hover { box-shadow: var(--shadow-lg); }
+
+        .product-image-wrapper { position: relative; cursor: pointer; }
+        .product-image { width: 100%; height: 192px; object-fit: cover; transition: transform 0.3s; }
+        .product-card:hover .product-image { transform: scale(1.02); }
+
+        .view-details-overlay {
+            position: absolute;
+            inset: 0;
+            background-color: rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .product-card:hover .view-details-overlay { opacity: 1; }
+        .view-details-overlay span {
+            color: var(--color-light-bg);
+            font-weight: bold;
+            font-size: 1.125rem;
+            padding: 8px 16px;
+            background-color: var(--color-primary);
+            border-radius: 9999px; /* full rounded */
+        }
+
+        .product-info {
+            padding: 16px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .product-info h3 { font-size: 1.125rem; font-weight: 600; color: var(--color-text); margin-bottom: 8px; }
+        .product-info p { font-size: 1.5rem; font-weight: bold; color: var(--color-primary); margin-bottom: 16px; }
+
+        /* Action Buttons */
+        .actions-flex { display: flex; gap: 8px; }
+        .add-to-cart-btn {
+            flex-grow: 1;
+            background-color: var(--color-primary);
+            color: var(--color-light-bg);
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: background-color 0.15s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+        .add-to-cart-btn:hover { background-color: #4338ca; }
+
+        .wishlist-btn {
+            padding: 8px;
+            border-radius: 8px;
+            transition: background-color 0.15s, color 0.15s;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            background-color: #e5e7eb;
+            color: #4b5563;
+        }
+        .wishlist-btn.active {
+            background-color: var(--color-secondary);
+            color: var(--color-light-bg);
+            border-color: var(--color-secondary);
+        }
+        .wishlist-btn:hover { background-color: var(--color-secondary); color: var(--color-light-bg); }
+
+        /* --- PDP PAGE STYLES --- */
+        .pdp-wrapper {
+            background-color: var(--color-light-bg);
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: var(--shadow-lg);
+        }
+        .pdp-grid {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 32px;
+        }
+        @media (min-width: 1024px) { /* lg breakpoint */
+            .pdp-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .pdp-details h2 { font-size: 2.5rem; font-weight: bold; color: var(--color-text); margin-bottom: 8px; }
+        .pdp-details p.price { font-size: 3rem; font-weight: 800; color: var(--color-primary); margin-bottom: 24px; }
+        .pdp-details h3 { font-size: 1.125rem; font-weight: 600; color: #374151; margin-bottom: 8px; }
+        .pdp-details p.description { color: #4b5563; margin-bottom: 24px; }
+        
+        .pdp-controls { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
+        .pdp-quantity-group { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+        .pdp-quantity-group label { font-weight: 500; color: #374151; }
+        .pdp-quantity-group input { 
+            width: 80px; 
+            border-radius: 8px; 
+            border: 1px solid #d1d5db; 
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); 
+            padding: 8px;
+            text-align: center;
+        }
+        .pdp-stock-info { font-size: 0.875rem; color: #6b7280; }
+
+        .pdp-buttons-flex { display: flex; gap: 16px; }
+        .pdp-add-to-cart-btn {
+            flex-grow: 1;
+            background-color: var(--color-primary);
+            color: var(--color-light-bg);
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: background-color 0.15s;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            border: none;
+            cursor: pointer;
+        }
+        .pdp-add-to-cart-btn:hover { background-color: #4338ca; }
+        .pdp-wishlist-btn {
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            transition: background-color 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            background-color: var(--color-light-bg);
+            color: #4b5563;
+        }
+        .pdp-wishlist-btn.active { background-color: var(--color-secondary); color: var(--color-light-bg); border-color: var(--color-secondary); }
+        .pdp-wishlist-btn:hover { background-color: #fce7f3; }
+
+        .pdp-metadata { margin-top: 24px; padding: 16px; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb; }
+        .pdp-metadata h3 { font-weight: 600; font-size: 0.875rem; color: #374151; margin-bottom: 8px; }
+        .pdp-metadata ul { list-style: none; padding: 0; margin: 0; font-size: 0.875rem; color: #4b5563; }
+
+        /* Utility for hiding elements */
+        .hidden { display: none !important; }
+
+    </style>
+</head>
+<body class="p-0 sm:p-4">
+
+    <!-- Global State Display (For RTIM Verification) -->
+    <div id="cart-summary" class="cart-summary">
+        Cart: <span id="cart-count" class="count">0</span> items |
+        Wishlist: <span id="wishlist-count" class="wishlist-count">0</span> items
+    </div>
+
+    <div class="container">
+
+        <!-- HOMEPAGE VIEW -->
+        <div id="homepage-view" class="view-container hidden">
+            <header>
+                <h1>The RTIM E-Shop</h1>
+                <p>Track clicks, views, and conversions.</p>
+            </header>
+
+            <!-- 1. Hero Banner Carousel Slider -->
+            <section id="hero-banner" style="margin-bottom: 48px;">
+                <h2>Hero Carousel (4 Trackable Positions)</h2>
+                <div class="carousel-wrapper">
+                    <div id="carousel-container" class="carousel-container">
+                        <!-- Slide 1 (Hero Position ID: 1) -->
+                        <div id="hero-slide-1" data-position-id="1" onclick="handleHeroClick(1)" class="carousel-slide slide-1">
+                            <div>
+                                <h3 style="margin-bottom: 0;">New Arrivals - Position 1</h3>
+                                <p>Discover the latest tech releases.</p>
+                            </div>
+                        </div>
+                        <!-- Slide 2 (Hero Position ID: 2) -->
+                        <div id="hero-slide-2" data-position-id="2" onclick="handleHeroClick(2)" class="carousel-slide slide-2">
+                            <div>
+                                <h3 style="margin-bottom: 0;">Massive Sale! - Position 2</h3>
+                                <p>Up to 50% Off limited stock offers.</p>
+                            </div>
+                        </div>
+                        <!-- Slide 3 (Hero Position ID: 3) -->
+                        <div id="hero-slide-3" data-position-id="3" onclick="handleHeroClick(3)" class="carousel-slide slide-3">
+                            <div>
+                                <h3 style="margin-bottom: 0;">Free Shipping Guaranteed - Position 3</h3>
+                                <p>On all orders, forever.</p>
+                            </div>
+                        </div>
+                        <!-- Slide 4 (Hero Position ID: 4) -->
+                        <div id="hero-slide-4" data-position-id="4" onclick="handleHeroClick(4)" class="carousel-slide slide-4">
+                            <div>
+                                <h3 style="margin-bottom: 0;">Exclusive Beta Test - Position 4</h3>
+                                <p>Be the first to try our new product!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Carousel Navigation (Arrows) -->
+                    <button id="carousel-prev" aria-label="Previous Slide" class="carousel-nav-btn">
+                        <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <button id="carousel-next" aria-label="Next Slide" class="carousel-nav-btn">
+                        <svg class="w-6 h-6" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+
+                    <!-- Carousel Navigation (Dots) -->
+                    <div id="carousel-dots" class="carousel-dots">
+                        <button data-slide-index="0" class="carousel-dot" aria-label="Go to Slide 1"></button>
+                        <button data-slide-index="1" class="carousel-dot" aria-label="Go to Slide 2"></button>
+                        <button data-slide-index="2" class="carousel-dot" aria-label="Go to Slide 3"></button>
+                        <button data-slide-index="3" class="carousel-dot" aria-label="Go to Slide 4"></button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Product Listing -->
+            <section id="product-listing">
+                <h2>Featured Products</h2>
+                <div id="product-grid" class="product-grid">
+                    <!-- Product cards will be injected here by JavaScript -->
+                </div>
+            </section>
+        </div>
+
+        <!-- PDP VIEW (Dedicated Page Structure) -->
+        <div id="pdp-view" class="view-container hidden">
+            <nav class="navbar">
+                <a href="index.html" id="nav-home-link">← Back to Homepage</a>
+            </nav>
+            <div id="pdp-content-area" class="pdp-wrapper">
+                <!-- Product Detail content will be dynamically injected here -->
+            </div>
+        </div>
+
+    </div>
+    
+    <!-- JavaScript for Data and Interactivity -->
+    <script>
+        // --- DATA ---
+        const products = [
+            { id: 101, name: "Luxury Ergonomic Chair", price: 399.99, image: "https://placehold.co/600x400/3b82f6/ffffff?text=Ergo+Chair", description: "A top-tier ergonomic chair designed for all-day comfort, featuring superior lumbar support, adjustable headrest, and breathable mesh fabric. Excellent for long testing sessions.", stock: 15 },
+            { id: 102, name: "4K Ultra-Wide Monitor", price: 699.00, image: "https://placehold.co/600x400/ef4444/ffffff?text=4K+Monitor", description: "Immersive 34-inch ultra-wide monitor with stunning 4K resolution. Perfect for multitasking and deep visual analytics. Fast refresh rate for smooth RTIM data visualization.", stock: 5 },
+            { id: 103, name: "Wireless Mechanical Keyboard", price: 129.50, image: "https://placehold.co/600x400/10b981/ffffff?text=Keyboard", description: "Tactile brown switches with a compact TKL layout. Seamless wireless connectivity for a clutter-free desk. Highly satisfying click sounds.", stock: 50 },
+            { id: 104, name: "Noise-Cancelling Headphones", price: 249.00, image: "https://placehold.co/600x400/f59e0b/ffffff?text=Headphones", description: "Industry-leading noise cancellation to eliminate distractions. Over-ear design with plush memory foam. Ideal for focused deep work.", stock: 22 },
+        ];
+
+        // --- GLOBAL STATE ---
+        let cart = []; // Stores { productId, quantity }
+        let wishlist = new Set(); // Stores [productId]
+        
+        // Carousel State
+        let currentSlide = 0;
+        const slideCount = 4; // UPDATED to 4 slides
+        let carouselInterval;
+
+        // --- UTILITY FUNCTIONS ---
+
+        function updateGlobalStateDisplay() {
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            document.getElementById('cart-count').textContent = totalItems;
+            document.getElementById('wishlist-count').textContent = wishlist.size;
+            // Note: In a real-world scenario, this data would be fetched from storage. 
+            // Here, we persist the state in JS memory across 'pages' (reloads) for demonstration.
+            console.log(`[RTIM State] Cart Updated: ${totalItems} items. Wishlist: ${wishlist.size} items.`);
+        }
+
+        function addToCart(productId, quantity = 1) {
+            const existing = cart.find(item => item.productId === productId);
+            if (existing) {
+                existing.quantity += quantity;
+            } else {
+                cart.push({ productId, quantity });
+            }
+            updateGlobalStateDisplay();
+            const product = products.find(p => p.id === productId);
+            console.log(`[RTIM Event: AddToCart] Product ID: ${productId}, Quantity: ${quantity}, Price: ${product ? product.price : 'N/A'}`);
+
+            // Show a temporary success message
+            const productName = product?.name || 'Product';
+            let messageElement = document.getElementById('temp-message');
+            if (!messageElement) {
+                messageElement = document.createElement('div');
+                messageElement.id = 'temp-message';
+                document.body.appendChild(messageElement);
+            }
+            messageElement.style.cssText = `
+                position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); 
+                background-color: var(--color-success); color: white; padding: 12px; 
+                border-radius: 8px; box-shadow: var(--shadow-lg); z-index: 500; 
+                transition: opacity 0.3s;
+            `;
+            messageElement.textContent = `${quantity} x ${productName} added to cart!`;
+            clearTimeout(messageElement.timer);
+            messageElement.timer = setTimeout(() => messageElement.remove(), 3000);
+        }
+
+        function toggleWishlist(productId, btn = null) {
+            const isAdded = wishlist.has(productId);
+            if (isAdded) {
+                wishlist.delete(productId);
+                console.log(`[RTIM Event: RemoveFromWishlist] Product ID: ${productId}`);
+            } else {
+                wishlist.add(productId);
+                console.log(`[RTIM Event: AddToWishlist] Product ID: ${productId}`);
+            }
+            updateGlobalStateDisplay();
+            
+            if (btn) {
+                btn.classList.toggle('active', !isAdded);
+            }
+            // Re-render the product cards on the homepage to update the wishlist icon if needed
+            if (document.getElementById('homepage-view').classList.contains('active')) {
+                renderProductCards();
+            }
+
+            return !isAdded; // Return new state
+        }
+        
+        // --- HOMEPAGE LOGIC (CAROUSEL & PRODUCTS) ---
+
+        function handleHeroClick(positionId) {
+            console.log(`[RTIM Event: HeroClick] Clicked on Hero Position ID: ${positionId}`);
+            resetAutoSlide();
+        }
+
+        function updateCarousel(index) {
+            const container = document.getElementById('carousel-container');
+            const dots = document.querySelectorAll('#carousel-dots .carousel-dot');
+            
+            if (!container) return; // Guard clause if we are not on the homepage
+
+            // Boundary check and wrap-around logic
+            if (index < 0) {
+                index = slideCount - 1;
+            } else if (index >= slideCount) {
+                index = 0;
+            }
+            currentSlide = index;
+
+            // FIX APPLIED HERE: Use explicit integer multiplication (25%) instead of float division, 
+            // which avoids subtle floating point errors that cause visual bleeding.
+            const translationPercentage = currentSlide * 25; 
+            container.style.transform = `translateX(-${translationPercentage}%)`;
+
+            // Update dots
+            dots.forEach((dot, i) => {
+                dot.classList.remove('active');
+                if (i === currentSlide) {
+                    dot.classList.add('active');
+                }
+            });
+            
+            console.log(`[RTIM Event: CarouselView] Now showing slide: ${currentSlide + 1} (Position ID: ${currentSlide + 1})`);
+        }
+        
+        function nextSlide() { updateCarousel(currentSlide + 1); }
+        function prevSlide() { updateCarousel(currentSlide - 1); }
+
+        function startAutoSlide() {
+            clearInterval(carouselInterval); 
+            carouselInterval = setInterval(nextSlide, 5000); 
+        }
+
+        function resetAutoSlide() { startAutoSlide(); }
+
+        function renderProductCards() {
+            const grid = document.getElementById('product-grid');
+            if (!grid) return; // Guard clause
+
+            // Determine the base path for relative linking
+            const basePath = window.location.pathname;
+
+            grid.innerHTML = products.map(product => `
+                <div
+                    id="product-card-${product.id}"
+                    data-product-id="${product.id}"
+                    class="product-card"
+                >
+                    <!-- Product Image/View Details Area (Click performs redirect) -->
+                    <div class="product-image-wrapper" onclick="window.location.href = '${basePath}?pdp=${product.id}'" data-track-name="View-Details-Click" data-product-id="${product.id}">
+                        <img src="${product.image}" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/333333?text=Product+Image';" class="product-image">
+                        <div class="view-details-overlay">
+                            <span>View Details</span>
+                        </div>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="product-info">
+                        <div>
+                            <h3>${product.name}</h3>
+                            <p>$${product.price.toFixed(2)}</p>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="actions-flex">
+                            <button
+                                id="list-cart-btn-${product.id}"
+                                onclick="event.stopPropagation(); addToCart(${product.id}, 1)"
+                                data-track-name="Add-to-Cart-Listing"
+                                data-product-id="${product.id}"
+                                class="add-to-cart-btn"
+                            >
+                                Add to Cart
+                            </button>
+                            <button
+                                id="list-wishlist-btn-${product.id}"
+                                onclick="event.stopPropagation(); const btn = this; toggleWishlist(${product.id}, btn);"
+                                data-track-name="Add-to-Wishlist-Listing"
+                                data-product-id="${product.id}"
+                                class="wishlist-btn ${wishlist.has(product.id) ? 'active' : ''}"
+                            >
+                                <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // --- PDP LOGIC ---
+
+        function renderPDP(productId) {
+            const product = products.find(p => p.id == productId);
+            if (!product) {
+                document.getElementById('pdp-content-area').innerHTML = `
+                    <h2 style="color: #ef4444;">Error: Product Not Found</h2>
+                    <p>The product with ID ${productId} does not exist.</p>
+                `;
+                console.error(`[RTIM Error] Invalid Product ID in URL: ${productId}`);
+                return;
+            }
+
+            const isWishlisted = wishlist.has(product.id);
+            const contentArea = document.getElementById('pdp-content-area');
+
+            // Set content dynamically
+            contentArea.innerHTML = `
+                <div class="pdp-grid">
+                    <!-- Image Column -->
+                    <div>
+                        <img src="${product.image}" alt="${product.name}" onerror="this.onerror=null;this.src='https://placehold.co/600x400/cccccc/333333?text=Product+Image';" style="width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                        <p style="margin-top: 16px; font-size: 0.75rem; color: #6b7280;">Image ID: IMG-${product.id}</p>
+                    </div>
+
+                    <!-- Details Column -->
+                    <div class="pdp-details">
+                        <h2 id="pdp-name">${product.name}</h2>
+                        <p class="price">$${product.price.toFixed(2)}</p>
+
+                        <div style="margin-bottom: 24px;">
+                            <h3>Description</h3>
+                            <p class="description">${product.description}</p>
+                        </div>
+
+                        <!-- Add to Cart & Wishlist Controls -->
+                        <div class="pdp-controls">
+                            <div class="pdp-quantity-group">
+                                <label for="quantity-selector">Quantity:</label>
+                                <input
+                                    type="number"
+                                    id="quantity-selector"
+                                    min="1"
+                                    max="${product.stock}"
+                                    value="1"
+                                    onchange="console.log('Quantity changed to: ' + this.value)"
+                                >
+                                <span class="pdp-stock-info">(${product.stock} in stock)</span>
+                            </div>
+
+                            <div class="pdp-buttons-flex">
+                                <button
+                                    id="pdp-add-to-cart"
+                                    data-track-name="Add-to-Cart-PDP"
+                                    data-product-id="${product.id}"
+                                    class="pdp-add-to-cart-btn"
+                                >
+                                    Add to Cart
+                                </button>
+                                <button
+                                    id="pdp-add-to-wishlist"
+                                    data-track-name="Add-to-Wishlist-PDP"
+                                    data-product-id="${product.id}"
+                                    class="pdp-wishlist-btn ${isWishlisted ? 'active' : ''}"
+                                >
+                                    <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clip-rule="evenodd"></path></svg>
+                                    <span style="margin-left: 8px;">Wishlist</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Product Attributes (for additional tracking context) -->
+                        <div class="pdp-metadata">
+                            <h3>Product Metadata</h3>
+                            <ul>
+                                <li><strong>SKU:</strong> ${product.id}</li>
+                                <li><strong>Category:</strong> Office/Tech</li>
+                                <li><strong>Seller:</strong> Acme Corp</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Attach event listeners for buttons on the PDP
+            document.getElementById('pdp-add-to-cart').onclick = function() {
+                const quantity = parseInt(document.getElementById('quantity-selector').value, 10);
+                if (quantity > 0 && quantity <= product.stock) {
+                    addToCart(product.id, quantity);
+                } else {
+                    console.error("Invalid quantity for Add to Cart.");
+                }
+            };
+
+            document.getElementById('pdp-add-to-wishlist').onclick = function() {
+                toggleWishlist(product.id, this);
+            };
+
+            // RTIM Logging for Page View
+            console.log(`[RTIM Event: PageView] Loaded PDP for Product ID: ${product.id}`);
+        }
+
+        // --- INITIALIZATION ---
+        window.onload = function() {
+            updateGlobalStateDisplay(); 
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const pdpId = urlParams.get('pdp');
+
+            if (pdpId) {
+                // RENDER PDP VIEW
+                document.getElementById('pdp-view').classList.remove('hidden');
+                document.getElementById('homepage-view').classList.add('hidden');
+                
+                // Fix: Ensure home link correctly points to the base path
+                const homeLink = document.getElementById('nav-home-link');
+                if (homeLink) {
+                    homeLink.href = window.location.pathname;
+                }
+                
+                renderPDP(pdpId);
+            } else {
+                // RENDER HOMEPAGE VIEW
+                document.getElementById('homepage-view').classList.remove('hidden');
+                document.getElementById('pdp-view').classList.add('hidden');
+                
+                renderProductCards();
+                
+                // Carousel Setup (only on homepage)
+                updateCarousel(0); 
+                startAutoSlide(); 
+                
+                const carouselArea = document.querySelector('#hero-banner > div');
+                if (carouselArea) {
+                    carouselArea.addEventListener('mouseenter', () => clearInterval(carouselInterval));
+                    carouselArea.addEventListener('mouseleave', startAutoSlide);
+
+                    document.getElementById('carousel-prev').addEventListener('click', () => { prevSlide(); resetAutoSlide(); });
+                    document.getElementById('carousel-next').addEventListener('click', () => { nextSlide(); resetAutoSlide(); });
+                    
+                    document.querySelectorAll('#carousel-dots .carousel-dot').forEach(dot => {
+                        dot.addEventListener('click', function() {
+                            updateCarousel(parseInt(this.getAttribute('data-slide-index')));
+                            resetAutoSlide();
+                        });
+                    });
+                }
+                 console.log(`[RTIM Event: PageView] Loaded Homepage`);
+            }
+        };
+    </script>
+</body>
+</html>
