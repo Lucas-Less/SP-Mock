@@ -1,9 +1,13 @@
-console.log('Demo sitemap: updated Aug 19, 2025')
+console.log('[SP] - Sitemap v1.5')
 SalesforceInteractions.setLoggingLevel('debug')
 
 try {
   SalesforceInteractions.init({
-    consents: window.CONSENTS
+    consents: [{
+      purpose: 'Data Cloud Web SDK',
+      provider: 'Default OptIn',
+      status: SalesforceInteractions.ConsentStatus.OptIn
+    }]
   }).then(() => {
     SalesforceInteractions.initSitemap({
       global: {},
@@ -30,16 +34,28 @@ function createPageConfig () {
   return {
     name: 'Homepage',
     isMatch: () => /\/sp-mockup-lucasless/.test(window.location.href),
+    interaction: {
+        name: "Page View",
+        eventType: "websiteEngagement",
+        id: "Home",
+        type: "View"
+    },
+    contentZones: [
+        { name: "recommendations_banner", selector: "#hero-slide-1" },
+    ],
     listeners: [
       SalesforceInteractions.listener('click', '.product-image-wrapper', (event) => {
         console.log(`[SP] - Click Button`+ event.currentTarget )
         SalesforceInteractions.sendEvent({
           interaction: {
-            name: 'View Catalog Object',
-            catalogObject: {
-              type: 'Product',
-              id: 999
-            }
+            name: "View Page Object",
+                name : "Click Button",
+                eventType : "catalog",
+                catalogObjectType : "Product",
+                catalogObjectId: "ProductGeneric",
+                type: "Click",
+                id: "Product00001",
+                interactionName: "Click P0001"
           }
         })
       }),
@@ -47,7 +63,7 @@ function createPageConfig () {
         console.log('[SP] - Luxury Ergonomic Chair')
         SalesforceInteractions.sendEvent({
           interaction: {
-            name: 'View Catalog Object',
+            name: SalesforceInteractions.CatalogObjectInteractionName.ViewCatalogObject,
             catalogObject: {
               type: 'Product',
               id: 101
@@ -59,7 +75,7 @@ function createPageConfig () {
         console.log('[SP] - 4K Ultra-Wide Monitor')
         SalesforceInteractions.sendEvent({
           interaction: {
-            name: 'View Catalog Object',
+            name: SalesforceInteractions.CatalogObjectInteractionName.ViewCatalogObject,
             catalogObject: {
               type: 'Product',
               id: 102
@@ -71,7 +87,7 @@ function createPageConfig () {
         console.log('[SP] - Wireless Mechanical Keyboard')
         SalesforceInteractions.sendEvent({
           interaction: {
-            name: 'View Catalog Object',
+            name: SalesforceInteractions.CatalogObjectInteractionName.ViewCatalogObject,
             catalogObject: {
               type: 'Product',
               id: 103
@@ -83,7 +99,7 @@ function createPageConfig () {
         console.log('[SP] - Noise-Cancelling Headphones')
         SalesforceInteractions.sendEvent({
           interaction: {
-            name: 'View Catalog Object',
+            name: SalesforceInteractions.CatalogObjectInteractionName.ViewCatalogObject,
             catalogObject: {
               type: 'Product',
               id: 104
