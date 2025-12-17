@@ -1,4 +1,4 @@
-console.log('[SP] - Sitemap v1.5')
+console.log('[SP] - Sitemap v1.6')
 SalesforceInteractions.setLoggingLevel('debug')
 
 try {
