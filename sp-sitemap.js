@@ -66,7 +66,7 @@ function createPageConfig () {
             name: SalesforceInteractions.CatalogObjectInteractionName.ViewCatalogObject,
             catalogObject: {
               type: 'Product',
-              id: 101
+              id: 101 
             }
           }
         })
@@ -212,4 +212,41 @@ function createPageConfig () {
       }),
     ]
   }
+}
+
+
+
+function sendProductView() {
+    if (!window.dataLayer || !Array.isArray(window.dataLayer)) {
+        return null;
+    }
+
+    // Iterate backward to find the most recent matching event
+    for (let i = window.dataLayer.length - 1; i >= 0; i--) {
+        const currentLayer = window.dataLayer[i];
+
+        // Use a strict filter set to ensure we find the exact event structure
+        if (currentLayer &&
+            currentLayer.event === 'productDetail' && // 1. Check top-level event name
+            currentLayer.details?.name === 'detalle de productos' && // 2. Check details.name
+            currentLayer.details?.products?.[0]?.id) // 3. Safely check for the product ID itself
+        {
+            // If all checks pass, safely extract and return the ID
+            const productId = currentLayer.details.products[0].id;
+
+            const viewProduct = {
+              name: "View Product Page detail",
+              eventType : "catalog",
+              catalogObjectType : "Product",
+              catalogObjectId: productId,
+              type: "View",
+              id: productId,
+              interactionName: "View Detalle de Producto"
+        }
+            return viewProduct;
+        }
+    }
+
+    // Return null if no matching event is found
+    return null;
 }
